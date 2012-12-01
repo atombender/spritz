@@ -1,0 +1,10 @@
+require 'tempfile'
+require 'rmagick'
+require 'optparse'
+require 'yajl/json_gem'
+require 'zlib'
+
+require 'spritz/version'
+require 'spritz/rect'
+require 'spritz/max_rects_packer'
+require 'spritz/package'
