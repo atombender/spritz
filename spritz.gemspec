@@ -15,8 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Spritz::VERSION
 
-  gem.add_runtime_dependency 'rmagick', ['~> 2.13.1']
-  gem.add_runtime_dependency 'sinatra', ['~> 1.0']
+  gem.add_runtime_dependency 'rmagick', ['= 2.13.4']
   gem.add_runtime_dependency 'yajl-ruby', ['~> 1.1']
 
   gem.add_development_dependency "rspec"
