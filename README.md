@@ -1,27 +1,32 @@
-Spritz
-====
+# Spritz
 
-Spritz is a tool for managing 2D assets. Currently its only feature is to create tiled atlas texture bitmaps, or sprite sheets, for drawing many sprites from a single, packed bitmap image. It's designed to be integrated into makefiles.
+Spritz is a tool for working with raw 2D assets to generate packed ones.
 
-Installation
-------------
+Spritz can take a bunch of images and create tiled atlas texture bitmaps (also known as sprite sheets) for drawing many sprites from a single, packed bitmap image.
+
+## Features
+
+* Easily integrates into makefiles.
+* Writes easily readable JSON.
+* Supports all image formats supported by ImageMagick (ie., a lot).
+* Supports outputting to PNG and iOS `pvrtc` (includ gzipped) formats.
+* Can generates setup code for Moai.
+
+## Installation
 
     gem install spritz
 
-Installation from source
-------------------------
+## Installation from source
 
     rake install
 
-Dependencies
-------------
+## Dependencies
 
 * Ruby 1.8.7 or later.
 * ImageMagick 6.x.
-* `textiletool` from iOS SDK, if you want to generate "pvrtc" textures.
+* `textiletool` from iOS SDK, if you want to generate `pvrtc` textures.
 
-Usage
------
+## Usage
 
 This will generate a `dungeon` package:
 
@@ -29,8 +34,22 @@ This will generate a `dungeon` package:
 
 The command will generate:
 
-* `sheets/dungeon.0.png`, `sheets/dungeon.1.png` etc. — Texture bitmaps.
-* `sheets/dungeon.json.gz` — A gzipped JSON file describing the necessary vertex and texture coordinates for each image, ready to be used with drawing functions.
+* `sheets/dungeon.0.png`, `sheets/dungeon.1.png` etc. — the texture bitmaps.
+* `sheets/dungeon.json.gz` — a gzipped JSON file describing the necessary vertex and texture coordinates for each image, ready to be used with drawing functions.
+
+For more options:
+
+    spritz pack --help
+
+## Plugins
+
+### Moai
+
+To generate a quad deck for [Moai](http://getmoai.com), use the option:
+
+    --moai:quad-decks myfile.lua
+
+## Tips
 
 For texture-mapping applications, you will want to specify `--padding 1` in order to ensure that texture coordinates round evenly to pixel coordinates.
 
@@ -38,8 +57,7 @@ The default texture size is 2048x2048, which corresponds to the largest texture 
 
 If an image does not fit within a single texture, it will be split across multiple textures. In other words, there is no upper limit on the dimensions of any image.
 
-Package format
---------------
+## Package format
 
 The format of the package JSON file is:
 
@@ -61,7 +79,10 @@ Each image hash has the following format:
 * `h`: The haight of the slice.
 * `r`: Will be `true` if rotated -90 degrees.
 
-License
--------
+## Credits
+
+The "MaxRects" algorithm was ported from C++ code originally by Jukka Jylänki.
+
+## License
 
 See accompanying `LICENSE` file.

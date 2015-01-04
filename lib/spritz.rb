@@ -4,6 +4,7 @@ require 'optparse'
 require 'yajl/json_gem'
 require 'zlib'
 
+require 'spritz/plugins/moai_plugin'
 require 'spritz/version'
 require 'spritz/logger'
 require 'spritz/rect'
