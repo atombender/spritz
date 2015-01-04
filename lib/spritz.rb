@@ -5,6 +5,8 @@ require 'yajl/json_gem'
 require 'zlib'
 
 require 'spritz/version'
+require 'spritz/logger'
 require 'spritz/rect'
 require 'spritz/max_rects_packer'
 require 'spritz/package'
+require 'spritz/cli'

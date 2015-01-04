@@ -1,6 +1,9 @@
 module Spritz
 
   class Rect
+
+    attr_accessor :x, :y, :width, :height, :value
+
     def initialize(value, x, y, width, height, rotated = false)
       @value, @x, @y, @width, @height, @rotated = value, x, y, width, height, rotated
     end
@@ -28,7 +31,6 @@ module Spritz
       @y + @height
     end
 
-    attr_accessor :x, :y, :width, :height, :value
   end
 
 end

@@ -3,8 +3,12 @@ module Spritz
   class Package
 
     class Slice
+
+      attr_reader :file_name, :x, :y, :width, :height, :padding
+
       def initialize(file_name, x, y, width, height, padding)
-        @file_name, @x, @y, @width, @height, @padding = file_name, x, y, width, height, padding
+        @file_name, @x, @y, @width, @height, @padding =
+          file_name, x, y, width, height, padding
       end
 
       def image
@@ -13,21 +17,26 @@ module Spritz
         image
       end
 
-      attr_reader :file_name, :x, :y, :width, :height, :padding
     end
 
+    attr_reader :name
+    attr_reader :texture_width, :texture_height
+    attr_reader :format
+    attr_reader :padding
+    attr_reader :sheets
+
     def initialize(options = {})
-      @package_name = options[:package_name]
+      @name = options[:name]
       @texture_width = options[:width] || 2048
       @texture_height = options[:height] || 2048
       @format = options[:format] || :png
       @padding = options[:padding]
       @sheets = []
-      @logger = options[:logger]
+      @rendered_images = {}
     end
 
     def add_file(file_name)
-      log "Add", file_name
+      Logger.log_action "Add", file_name
 
       image = Magick::Image.ping(file_name).first
       t_width = @texture_width - @padding * 2
@@ -36,12 +45,13 @@ module Spritz
         (0..(image.rows / t_height.to_f).floor).to_a.each do |tile_y|
           if image.columns - tile_x * t_width + @padding > 0 and
             image.rows - tile_y * t_height + @padding > 0
-            add_slice(Slice.new(file_name,
-              tile_x * t_width,
-              tile_y * t_height,
-              [image.columns - tile_x * t_width + @padding, t_width].min,
-              [image.rows - tile_y * t_height + @padding, t_height].min,
-              @padding))
+            add_slice(
+              Slice.new(file_name,
+                tile_x * t_width,
+                tile_y * t_height,
+                [image.columns - tile_x * t_width + @padding, t_width].min,
+                [image.rows - tile_y * t_height + @padding, t_height].min,
+                @padding))
           end
         end
       end
@@ -63,23 +73,28 @@ module Spritz
       end
     end
 
-    def write!
+    def render
       @sheets.each_with_index do |sheet, index|
-        base_name = "#{@package_name}.#{index}"
+        Logger.log_action "Render", "Sheet ##{index}"
+        @rendered_images[index] ||= render_sheet(sheet)
+      end
+      @rendered_images
+    end
 
-        log "Render", "(#{base_name})"
+    def write
+      render
 
-        image = render_sheet(sheet)
-
+      @rendered_images.each_pair do |index, image|
+        base_name = "#{@name}.#{index}"
         case @format
           when :png
-            log_write(file_name_for_format(base_name, @format)) do |path|
+            Logger.log_write(file_name_for_format(base_name, @format)) do |path|
               File.open(path, 'w:binary') do |file|
                 file.write as_png(image)
               end
             end
           when :pvrtc, :'pvrtc-gz'
-            log_write(file_name_for_format(base_name, @format)) do |path|
+            Logger.log_write(file_name_for_format(base_name, @format)) do |path|
               Tempfile.open('spritz') do |tempfile|
                 tempfile.write as_png(image)
                 tempfile.close
@@ -130,7 +145,7 @@ module Spritz
         :textures => Hash[*(0...@sheets.length).to_a.map { |i|
           [i, {
             :format => @format,
-            :file => "#{File.basename(@package_name)}.#{i}.#{@format}"
+            :file => "#{File.basename(@name)}.#{i}.#{@format}"
           }]
         }.flatten],
         :texture_width => @texture_width,
@@ -139,23 +154,23 @@ module Spritz
         :frames => frames
       }
 
-      log_write("#{@package_name}.json.gz") do |path|
+      Logger.log_write("#{@name}.json.gz") do |path|
         Zlib::GzipWriter.open(path) do |file|
           file.write JSON.pretty_generate(structure)
         end
       end
     end
 
-    private
-
-      def file_name_for_format(base, format)
-        case format
-          when :png, :pvrtc
-            return "#{base}.#{format}"
-          when :'pvrtc-gz'
-            return "#{base}.pvr.gz"
-        end
+    def file_name_for_format(base, format)
+      case format
+        when :png, :pvrtc
+          return "#{base}.#{format}"
+        when :'pvrtc-gz'
+          return "#{base}.pvr.gz"
       end
+    end
+
+    private
 
       def as_png(image)
         image.to_blob {
@@ -227,23 +242,6 @@ module Spritz
         sheet = MaxRectsPacker.new(@texture_width - @padding, @texture_height - @padding)
         @sheets.push(sheet)
         sheet
-      end
-
-      def log_write(path, &block)
-        if File.exist?(path)
-          log "Overwrite", path
-        else
-          log "Create", path
-        end
-        yield path
-      end
-
-      def log(what, *rest)
-        if @logger
-          s = "\e[32;1m%10s\e[0m %s\n" % [what, rest.join(' ')]
-          @logger.write(s)
-          @logger.flush
-        end
       end
 
   end
